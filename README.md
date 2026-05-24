@@ -28,7 +28,7 @@ In your CONFIG page, add the mermaid plug, e.g.:
     ```space-lua
     config.set {
       plugs = {
-        "github:silverbulletmd/silverbullet-mermaid/mermaid.plug.js"
+        "github:kebot/silverbullet-beautiful-mermaid/mermaid.plug.js"
       }
     }
     ```
