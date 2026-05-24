@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "npx plug-compile mermaid.plug.yaml"
+    "build": "npx plug-compile --debug mermaid.plug.yaml && node patch.mjs"
   },
   "dependencies": {
-    "@silverbulletmd/silverbullet": "^2.5.3",
+    "@silverbulletmd/silverbullet": "^2.8.1",
     "beautiful-mermaid": "^1.0.0"
   }
 }
