@@ -1,36 +1,40 @@
+import { renderMermaidSVG, THEMES } from "beautiful-mermaid";
 import { system } from "@silverbulletmd/silverbullet/syscalls";
 import { CodeWidgetContent } from "@silverbulletmd/silverbullet/type/client";
 
 export async function widget(
-    bodyText: string,
+  bodyText: string,
 ): Promise<CodeWidgetContent> {
-  const config = await system.getConfig("mermaid", {version: "11.10.1"})
-  const mermaidVersion = config?.version;
-  let mermaidHash : string | undefined = config?.integrity ? `"${config.integrity}"` : `"sha256-BmQmdWDS8X2OTbrwELWK366LV6escyWhHHe0XCTU/Hk="`
-  if (config?.integrity_disabled) {
-    mermaidHash = undefined;
+  const config = await system.getConfig("mermaid", {});
+
+  const options: Record<string, unknown> = {};
+
+  if (config?.theme && THEMES[config.theme as string]) {
+    Object.assign(options, THEMES[config.theme as string]);
   }
 
-  let packs: string = "";
-  if (config?.icon_packs) {
-    for (const pack of config?.icon_packs) {
-      packs += `{
-        name: "${pack.name}",
-        loader: () => fetch("${pack.url}").then(r => r.json()),
-      },`;
+  for (const key of ["bg", "fg", "line", "accent", "muted", "surface", "border", "font", "transparent", "padding", "nodeSpacing", "layerSpacing"]) {
+    if (config?.[key] !== undefined) {
+      options[key] = config[key];
     }
   }
 
+  let html: string;
+  try {
+    const svg = renderMermaidSVG(bodyText, options as Parameters<typeof renderMermaidSVG>[1]);
+    html = `<div style="max-width:100%;overflow:auto">${svg}</div>`;
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    html = `<pre style="color:red;white-space:pre-wrap">Mermaid error: ${msg}</pre>`;
+  }
+
   return {
-    html: `<pre class="mermaid">${bodyText.replaceAll("<", "&lt;")}</pre>`,
+    html,
     script: `
-    loadJsByUrl("https://cdn.jsdelivr.net/npm/mermaid@${mermaidVersion}/dist/mermaid.min.js", ${mermaidHash}).then(() => {
-      mermaid.init().then(updateHeight);
-      mermaid.registerIconPacks([${packs}]);
-    });
     document.addEventListener("click", () => {
       api({type: "blur"});
     });
+    updateHeight();
     `,
   };
 }
